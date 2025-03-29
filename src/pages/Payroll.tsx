@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,19 +37,36 @@ const Payroll = () => {
       
       if (payrollError) throw payrollError;
       
-      // Get user emails separately (since we can't query auth.users directly)
+      // Get user emails separately using the edge function
       const userIds = payrollData.map(payroll => payroll.user_id);
       
-      // For this demo, we'll simulate getting user emails
-      // In a real app, you'd need a secure way to get this data
-      const mockUserEmails = userIds.map(id => ({
-        id,
-        email: `user-${id.substring(0, 8)}@example.com`
-      }));
+      // Call the Edge Function to get user emails
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.supabaseKey}`
+        },
+        body: JSON.stringify({ user_ids: userIds })
+      });
+      
+      let usersData = [];
+      
+      if (response.ok) {
+        usersData = await response.json();
+      } else {
+        console.error('Error fetching user emails:', await response.text());
+        // Fallback - generate placeholder emails
+        usersData = userIds.map(id => ({ 
+          id, 
+          email: `user-${id.substring(0, 8)}@example.com` 
+        }));
+      }
       
       // Combine the payroll data with user emails
       const enhancedPayrolls = payrollData.map(payroll => {
-        const userEmail = mockUserEmails.find(u => u.id === payroll.user_id)?.email;
+        const userEmail = usersData.find(u => u.id === payroll.user_id)?.email || 
+                         `user-${payroll.user_id.substring(0, 8)}@example.com`;
         return {
           ...payroll,
           email: userEmail
@@ -332,14 +348,33 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
       
       if (error) throw error;
       
-      // In a real app, you'd get user data from a secure endpoint
-      // Here we're mocking it for demo purposes
-      const mockUsers = data.map(item => ({
-        id: item.user_id,
-        email: `user-${item.user_id.substring(0, 8)}@example.com`
-      }));
-      
-      setUsers(mockUsers);
+      // Call the Edge Function to get user emails
+      if (data && data.length > 0) {
+        const userIds = data.map(item => item.user_id);
+        
+        const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          },
+          body: JSON.stringify({ user_ids: userIds })
+        });
+        
+        let usersData = [];
+        
+        if (response.ok) {
+          usersData = await response.json();
+        } else {
+          // Fallback - generate placeholder emails
+          usersData = userIds.map(id => ({ 
+            id, 
+            email: `user-${id.substring(0, 8)}@example.com` 
+          }));
+        }
+        
+        setUsers(usersData);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     }

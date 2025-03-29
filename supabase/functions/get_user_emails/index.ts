@@ -32,19 +32,25 @@ serve(async (req) => {
       );
     }
     
-    // Get user emails
-    const { data, error } = await supabaseAdmin
-      .from('auth.users')
-      .select('id, email')
-      .in('id', user_ids);
+    // Get user emails - using the auth schema directly with admin access
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
     
     if (error) {
       throw error;
     }
     
+    // Filter the users based on the requested IDs
+    const filteredUsers = data?.users.filter(user => user_ids.includes(user.id)) || [];
+    
+    // Extract just the id and email
+    const result = filteredUsers.map(user => ({
+      id: user.id,
+      email: user.email
+    }));
+    
     // Return the emails
     return new Response(
-      JSON.stringify(data || []),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

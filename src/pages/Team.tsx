@@ -40,21 +40,32 @@ const Team = () => {
       // Then get the user emails separately
       const userIds = teamMembersData.map(member => member.user_id);
       
-      // We need to get the user emails from auth.users, but we can't access it directly
-      // So we'll use a workaround - get them from the PostgreSQL session info
-      const { data: usersData, error: usersError } = await supabase.rpc('get_user_emails', { 
-        user_ids: userIds 
-      }).catch(() => {
-        // Fallback if the RPC doesn't exist - we'll use placeholder emails
-        return { 
-          data: userIds.map(id => ({ id, email: `user-${id.substring(0, 8)}@example.com` })),
-          error: null
-        };
+      // Call the Edge Function to get user emails
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.supabaseKey}`
+        },
+        body: JSON.stringify({ user_ids: userIds })
       });
+      
+      let usersData = [];
+      
+      if (response.ok) {
+        usersData = await response.json();
+      } else {
+        console.error('Error fetching user emails:', await response.text());
+        // Fallback - generate placeholder emails
+        usersData = userIds.map(id => ({ 
+          id, 
+          email: `user-${id.substring(0, 8)}@example.com` 
+        }));
+      }
       
       // Merge the team members with their corresponding user emails
       const enhancedTeamMembers = teamMembersData.map(member => {
-        const userEmail = usersData?.find(u => u.id === member.user_id)?.email || 
+        const userEmail = usersData.find(u => u.id === member.user_id)?.email || 
                          `user-${member.user_id.substring(0, 8)}@example.com`;
         return {
           ...member,
@@ -216,13 +227,44 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
       
       if (error) throw error;
       
-      // Add user emails (in a real app, you'd get this from a secure endpoint)
-      const managersWithEmails = data.map(manager => ({
-        ...manager,
-        email: `user-${manager.user_id.substring(0, 8)}@example.com`
-      }));
-      
-      setManagers(managersWithEmails);
+      // Get user emails for managers
+      if (data && data.length > 0) {
+        const managerUserIds = data.map(manager => manager.user_id);
+        
+        // Call the Edge Function to get user emails
+        const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          },
+          body: JSON.stringify({ user_ids: managerUserIds })
+        });
+        
+        let usersData = [];
+        
+        if (response.ok) {
+          usersData = await response.json();
+        } else {
+          // Fallback - generate placeholder emails
+          usersData = managerUserIds.map(id => ({ 
+            id, 
+            email: `user-${id.substring(0, 8)}@example.com` 
+          }));
+        }
+        
+        // Merge managers with their emails
+        const managersWithEmails = data.map(manager => {
+          const userEmail = usersData.find(u => u.id === manager.user_id)?.email || 
+                          `user-${manager.user_id.substring(0, 8)}@example.com`;
+          return {
+            ...manager,
+            email: userEmail
+          };
+        });
+        
+        setManagers(managersWithEmails);
+      }
     } catch (error) {
       console.error('Error fetching managers:', error);
     }
