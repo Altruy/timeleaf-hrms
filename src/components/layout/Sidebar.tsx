@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { LucideIcon, BarChart2, Calendar, Clock, Home, Users, Settings, LogOut } from "lucide-react";
+import { LucideIcon, BarChart2, Calendar, Clock, Home, Users, Settings, LogOut, CreditCard, FolderPlus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarItemProps {
@@ -36,9 +36,11 @@ const Sidebar = () => {
   const sidebarItems = [
     { icon: Home, label: "Dashboard", href: "/" },
     { icon: Clock, label: "Attendance", href: "/attendance" },
-    { icon: BarChart2, label: "Projects", href: "/projects" },
+    { icon: BarChart2, label: "Time Tracking", href: "/projects" },
+    { icon: FolderPlus, label: "Projects", href: "/project-management" },
     { icon: Calendar, label: "Schedule", href: "/schedule" },
     { icon: Users, label: "Team", href: "/team" },
+    { icon: CreditCard, label: "Payroll", href: "/payroll" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
   

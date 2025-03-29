@@ -9,6 +9,11 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Attendance from "./pages/Attendance";
 import Projects from "./pages/Projects";
+import Schedule from "./pages/Schedule";
+import Team from "./pages/Team";
+import ProjectManagement from "./pages/ProjectManagement";
+import Payroll from "./pages/Payroll";
+import ChatWidget from "./components/common/ChatWidget";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AttendanceProvider } from "./contexts/AttendanceContext";
 import { TimeTrackingProvider } from "./contexts/TimeTrackingContext";
@@ -65,12 +70,11 @@ const AppWithProviders = () => (
                     </ProtectedRoute>
                   }
                 />
-                {/* Add placeholder routes for the other pages */}
                 <Route
                   path="/schedule"
                   element={
                     <ProtectedRoute>
-                      <Dashboard />
+                      <Schedule />
                     </ProtectedRoute>
                   }
                 />
@@ -78,7 +82,23 @@ const AppWithProviders = () => (
                   path="/team"
                   element={
                     <ProtectedRoute>
-                      <Dashboard />
+                      <Team />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/project-management"
+                  element={
+                    <ProtectedRoute>
+                      <ProjectManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/payroll"
+                  element={
+                    <ProtectedRoute>
+                      <Payroll />
                     </ProtectedRoute>
                   }
                 />
@@ -92,6 +112,9 @@ const AppWithProviders = () => (
                 />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              
+              {/* Chat Widget */}
+              <ChatWidget />
             </BrowserRouter>
           </TimeTrackingProvider>
         </AttendanceProvider>

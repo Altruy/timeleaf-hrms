@@ -9,7 +9,145 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      payroll: {
+        Row: {
+          created_at: string
+          id: string
+          payment_date: string
+          payment_period_end: string
+          payment_period_start: string
+          salary: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payment_date: string
+          payment_period_end: string
+          payment_period_start: string
+          salary: number
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payment_date?: string
+          payment_period_end?: string
+          payment_period_start?: string
+          salary?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      project_members: {
+        Row: {
+          id: string
+          joined_at: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          manager_id: string | null
+          name: string
+          start_date: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          manager_id?: string | null
+          name: string
+          start_date: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          manager_id?: string | null
+          name?: string
+          start_date?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          department: string
+          hire_date: string
+          id: string
+          position: string
+          reports_to: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          hire_date: string
+          id?: string
+          position: string
+          reports_to?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          hire_date?: string
+          id?: string
+          position?: string
+          reports_to?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
