@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { Calendar, Plus, Search, FileDown, Table as TableIcon, Check, X } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { supabase, EDGE_FUNCTION_URL } from "@/integrations/supabase/client";
+import { supabase, EDGE_FUNCTION_URL, SUPABASE_PUBLISHABLE_KEY } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const Payroll = () => {

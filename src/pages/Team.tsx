@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, UserPlus } from "lucide-react";
 import OrgChart from "@/components/team/OrgChart";
 import TeamMemberList from "@/components/team/TeamMemberList";
-import { supabase, EDGE_FUNCTION_URL } from "@/integrations/supabase/client";
+import { supabase, EDGE_FUNCTION_URL, SUPABASE_PUBLISHABLE_KEY } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const Team = () => {
