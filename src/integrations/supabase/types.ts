@@ -48,6 +48,7 @@ export type Database = {
           joined_at: string
           project_id: string
           role: string
+          team_member_id: string | null
           user_id: string
         }
         Insert: {
@@ -55,6 +56,7 @@ export type Database = {
           joined_at?: string
           project_id: string
           role: string
+          team_member_id?: string | null
           user_id: string
         }
         Update: {
@@ -62,6 +64,7 @@ export type Database = {
           joined_at?: string
           project_id?: string
           role?: string
+          team_member_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -70,6 +73,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
         ]
@@ -109,32 +119,38 @@ export type Database = {
       }
       team_members: {
         Row: {
+          commission_rate: number | null
           created_at: string
           department: string
           hire_date: string
           id: string
           position: string
           reports_to: string | null
+          salary: number | null
           status: string
           user_id: string
         }
         Insert: {
+          commission_rate?: number | null
           created_at?: string
           department: string
           hire_date: string
           id?: string
           position: string
           reports_to?: string | null
+          salary?: number | null
           status: string
           user_id: string
         }
         Update: {
+          commission_rate?: number | null
           created_at?: string
           department?: string
           hire_date?: string
           id?: string
           position?: string
           reports_to?: string | null
+          salary?: number | null
           status?: string
           user_id?: string
         }
@@ -153,7 +169,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_department: {
+        Args: {
+          user_id: string
+        }
+        Returns: string
+      }
+      is_manager: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

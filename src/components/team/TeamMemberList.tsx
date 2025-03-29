@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +93,13 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
     }
   };
   
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  };
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -123,7 +129,7 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
               <TableHead>Department</TableHead>
               <TableHead>Position</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Hire Date</TableHead>
+              <TableHead>Salary</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -140,7 +146,7 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
                     ).join(' ')}
                   </Badge>
                 </TableCell>
-                <TableCell>{format(new Date(member.hire_date), "MMM d, yyyy")}</TableCell>
+                <TableCell>{formatCurrency(member.salary)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-1">
                     <Button 
@@ -211,6 +217,14 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
                       ? teamMembers.find(m => m.id === selectedMember.reports_to)?.email || 'Unknown'
                       : 'None'}
                   </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Salary</p>
+                  <p>{formatCurrency(selectedMember.salary)}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Commission Rate</p>
+                  <p>{selectedMember.commission_rate}%</p>
                 </div>
               </div>
             </div>

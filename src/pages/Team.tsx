@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -173,6 +174,8 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
     department: '',
     position: '',
     reports_to: null,
+    salary: 0,
+    commission_rate: 0,
     hire_date: new Date().toISOString().split('T')[0],
     status: 'active'
   });
@@ -266,6 +269,11 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
     if (submissionData.reports_to === "none") {
       submissionData.reports_to = null;
     }
+    
+    // Convert salary and commission to numbers
+    submissionData.salary = parseFloat(submissionData.salary) || 0;
+    submissionData.commission_rate = parseFloat(submissionData.commission_rate) || 0;
+    
     onSubmit(submissionData);
   };
 
@@ -313,6 +321,36 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
         
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
+            <Label htmlFor="salary">Salary</Label>
+            <Input 
+              id="salary" 
+              name="salary"
+              type="number"
+              value={formData.salary}
+              onChange={handleChange}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="commission_rate">Commission Rate (%)</Label>
+            <Input 
+              id="commission_rate" 
+              name="commission_rate"
+              type="number"
+              value={formData.commission_rate}
+              onChange={handleChange}
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              max="100"
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
             <Label htmlFor="hire_date">Hire Date</Label>
             <Input 
               id="hire_date" 
@@ -345,7 +383,7 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
           <Label htmlFor="reports_to">Reports To</Label>
           <Select 
             name="reports_to" 
-            onValueChange={value => handleChange({ target: { name: 'reports_to', value: value || null }})}
+            onValueChange={value => handleChange({ target: { name: 'reports_to', value: value === "none" ? null : value }})}
           >
             <SelectTrigger id="reports_to">
               <SelectValue placeholder="Select manager" />

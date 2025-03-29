@@ -29,7 +29,15 @@ const ProjectTeamMembers = ({ projectId, managerId }) => {
           id,
           role,
           user_id,
+          team_member_id,
           joined_at,
+          team_members (
+            id,
+            position,
+            department,
+            salary,
+            commission_rate
+          ),
           auth.users (email, id)
         `)
         .eq('project_id', projectId);
@@ -137,6 +145,11 @@ const ProjectTeamMembers = ({ projectId, managerId }) => {
                 <div>
                   <p className="font-medium">{member.users?.email}</p>
                   <p className="text-sm text-muted-foreground">{member.role}</p>
+                  {member.team_members && (
+                    <p className="text-xs text-muted-foreground">
+                      {member.team_members.department} · {member.team_members.position}
+                    </p>
+                  )}
                 </div>
               </div>
               <Button 
@@ -184,35 +197,61 @@ const ProjectTeamMembers = ({ projectId, managerId }) => {
 const AddMemberForm = ({ projectId, onSubmit, onCancel, existingMembers }) => {
   const [formData, setFormData] = useState({
     user_id: '',
+    team_member_id: '',
     role: 'member'
   });
-  const [availableUsers, setAvailableUsers] = useState([]);
+  const [availableTeamMembers, setAvailableTeamMembers] = useState([]);
   
   useEffect(() => {
-    fetchAvailableUsers();
+    fetchAvailableTeamMembers();
   }, []);
   
-  const fetchAvailableUsers = async () => {
+  const fetchAvailableTeamMembers = async () => {
     try {
-      // Get users from the team_members table who are not already in the project
+      // Get team members who are not already in the project
+      const existingTeamMemberIds = existingMembers
+        .filter(m => m.team_member_id)
+        .map(m => m.team_member_id);
+      
       const { data, error } = await supabase
         .from('team_members')
         .select(`
+          id,
           user_id,
+          position,
+          department,
+          status,
           auth.users (email, id)
         `)
-        .not('user_id', 'in', `(${existingMembers.map(m => m.user_id).join(',')})`);
+        .eq('status', 'active');
       
       if (error) throw error;
-      setAvailableUsers(data || []);
+      
+      // Filter out members already in the project
+      const filteredMembers = data.filter(member => 
+        !existingTeamMemberIds.includes(member.id)
+      );
+      
+      setAvailableTeamMembers(filteredMembers || []);
     } catch (error) {
-      console.error('Error fetching available users:', error);
+      console.error('Error fetching available team members:', error);
     }
   };
   
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSelectTeamMember = (teamMemberId) => {
+    const selectedMember = availableTeamMembers.find(m => m.id === teamMemberId);
+    if (selectedMember) {
+      setFormData(prev => ({
+        ...prev,
+        team_member_id: teamMemberId,
+        user_id: selectedMember.user_id
+      }));
+    }
   };
   
   const handleSubmit = (e) => {
@@ -224,19 +263,19 @@ const AddMemberForm = ({ projectId, onSubmit, onCancel, existingMembers }) => {
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="grid gap-2">
-          <Label htmlFor="user_id">Team Member</Label>
+          <Label htmlFor="team_member_id">Team Member</Label>
           <Select
-            name="user_id"
-            onValueChange={value => handleChange({ target: { name: 'user_id', value }})}
+            name="team_member_id"
+            onValueChange={handleSelectTeamMember}
             required
           >
-            <SelectTrigger id="user_id">
+            <SelectTrigger id="team_member_id">
               <SelectValue placeholder="Select a team member" />
             </SelectTrigger>
             <SelectContent>
-              {availableUsers.map(user => (
-                <SelectItem key={user.user_id} value={user.user_id}>
-                  {user.users?.email}
+              {availableTeamMembers.map(member => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.users?.email} ({member.position})
                 </SelectItem>
               ))}
             </SelectContent>

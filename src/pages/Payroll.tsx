@@ -59,12 +59,22 @@ const Payroll = () => {
         }));
       }
       
+      const { data: teamMembersData, error: teamMembersError } = await supabase
+        .from('team_members')
+        .select('*')
+        .in('user_id', userIds);
+      
+      if (teamMembersError) throw teamMembersError;
+      
       const enhancedPayrolls = payrollData.map(payroll => {
         const userEmail = usersData.find(u => u.id === payroll.user_id)?.email || 
                          `user-${payroll.user_id.substring(0, 8)}@example.com`;
+        const teamMember = teamMembersData.find(tm => tm.user_id === payroll.user_id);
+        
         return {
           ...payroll,
-          email: userEmail
+          email: userEmail,
+          teamMember
         };
       });
       
@@ -326,6 +336,7 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
     status: 'pending'
   });
   const [users, setUsers] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   
   useEffect(() => {
     fetchUsers();
@@ -335,35 +346,20 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
     try {
       const { data, error } = await supabase
         .from('team_members')
-        .select('user_id');
+        .select('*, auth.users(email, id)')
+        .eq('status', 'active');
       
       if (error) throw error;
       
-      if (data && data.length > 0) {
-        const userIds = data.map(item => item.user_id);
-        
-        const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
-          },
-          body: JSON.stringify({ user_ids: userIds })
-        });
-        
-        let usersData = [];
-        
-        if (response.ok) {
-          usersData = await response.json();
-        } else {
-          usersData = userIds.map(id => ({ 
-            id, 
-            email: `user-${id.substring(0, 8)}@example.com` 
-          }));
-        }
-        
-        setUsers(usersData);
-      }
+      setUsers(data.map(member => ({
+        id: member.user_id,
+        email: member.users?.email || `user-${member.user_id.substring(0, 8)}@example.com`,
+        salary: member.salary,
+        position: member.position,
+        department: member.department
+      })));
+      
+      setTeamMembers(data);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -372,6 +368,22 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleUserSelect = (userId) => {
+    const selectedMember = teamMembers.find(tm => tm.user_id === userId);
+    if (selectedMember && selectedMember.salary) {
+      setFormData(prev => ({ 
+        ...prev, 
+        user_id: userId,
+        salary: selectedMember.salary
+      }));
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        user_id: userId
+      }));
+    }
   };
   
   const handleSubmit = (e) => {
@@ -389,7 +401,7 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
           <Label htmlFor="user_id">Employee</Label>
           <Select
             name="user_id"
-            onValueChange={value => handleChange({ target: { name: 'user_id', value }})}
+            onValueChange={handleUserSelect}
             required
           >
             <SelectTrigger id="user_id">
@@ -398,7 +410,7 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
             <SelectContent>
               {users.map(user => (
                 <SelectItem key={user.id} value={user.id}>
-                  {user.email}
+                  {user.email} {user.department && `(${user.department})`}
                 </SelectItem>
               ))}
             </SelectContent>
