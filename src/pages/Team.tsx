@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -270,9 +269,8 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
       submissionData.reports_to = null;
     }
     
-    // Convert salary and commission to numbers
-    submissionData.salary = parseFloat(submissionData.salary) || 0;
-    submissionData.commission_rate = parseFloat(submissionData.commission_rate) || 0;
+    submissionData.salary = parseFloat(submissionData.salary.toString()) || 0;
+    submissionData.commission_rate = parseFloat(submissionData.commission_rate.toString()) || 0;
     
     onSubmit(submissionData);
   };

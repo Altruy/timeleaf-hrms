@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -344,22 +345,52 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
   
   const fetchUsers = async () => {
     try {
+      // Modified query to avoid using auth.users nested select
       const { data, error } = await supabase
         .from('team_members')
-        .select('*, auth.users(email, id)')
+        .select('*')
         .eq('status', 'active');
       
       if (error) throw error;
       
-      setUsers(data.map(member => ({
-        id: member.user_id,
-        email: member.users?.email || `user-${member.user_id.substring(0, 8)}@example.com`,
-        salary: member.salary,
-        position: member.position,
-        department: member.department
-      })));
-      
-      setTeamMembers(data);
+      // Fetch user emails separately
+      if (data && data.length > 0) {
+        const userIds = data.map(member => member.user_id);
+        
+        const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+          },
+          body: JSON.stringify({ user_ids: userIds })
+        });
+        
+        let usersData = [];
+        
+        if (response.ok) {
+          usersData = await response.json();
+        } else {
+          console.error('Error fetching user emails:', await response.text());
+          usersData = userIds.map(id => ({ 
+            id, 
+            email: `user-${id.substring(0, 8)}@example.com` 
+          }));
+        }
+        
+        // Combine the data
+        const enhancedUsers = data.map(member => ({
+          id: member.user_id,
+          email: usersData.find(u => u.id === member.user_id)?.email || 
+                 `user-${member.user_id.substring(0, 8)}@example.com`,
+          salary: member.salary,
+          position: member.position,
+          department: member.department
+        }));
+        
+        setUsers(enhancedUsers);
+        setTeamMembers(data);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     }

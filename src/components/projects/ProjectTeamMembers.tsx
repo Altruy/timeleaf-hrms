@@ -23,6 +23,7 @@ const ProjectTeamMembers = ({ projectId, managerId }) => {
   const fetchProjectMembers = async () => {
     try {
       setIsLoading(true);
+      // Modified query to avoid using auth.users nested select
       const { data, error } = await supabase
         .from('project_members')
         .select(`
@@ -37,13 +38,52 @@ const ProjectTeamMembers = ({ projectId, managerId }) => {
             department,
             salary,
             commission_rate
-          ),
-          auth.users (email, id)
+          )
         `)
         .eq('project_id', projectId);
       
       if (error) throw error;
-      setProjectMembers(data || []);
+      
+      // Fetch team member email information separately
+      if (data && data.length > 0) {
+        const userIds = data.map(member => member.user_id);
+        
+        const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+          },
+          body: JSON.stringify({ user_ids: userIds })
+        });
+        
+        let usersData = [];
+        
+        if (response.ok) {
+          usersData = await response.json();
+        } else {
+          console.error('Error fetching user emails:', await response.text());
+          usersData = userIds.map(id => ({ 
+            id, 
+            email: `user-${id.substring(0, 8)}@example.com` 
+          }));
+        }
+        
+        // Combine the data
+        const enhancedData = data.map(member => {
+          const userEmail = usersData.find(u => u.id === member.user_id)?.email || 
+                           `user-${member.user_id.substring(0, 8)}@example.com`;
+          
+          return {
+            ...member,
+            email: userEmail
+          };
+        });
+        
+        setProjectMembers(enhancedData);
+      } else {
+        setProjectMembers([]);
+      }
     } catch (error) {
       console.error('Error fetching project members:', error);
       toast({
@@ -140,10 +180,10 @@ const ProjectTeamMembers = ({ projectId, managerId }) => {
             <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border">
               <div className="flex items-center">
                 <Avatar className="h-9 w-9 mr-3">
-                  <AvatarFallback>{getInitials(member.users?.email)}</AvatarFallback>
+                  <AvatarFallback>{getInitials(member.email)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{member.users?.email}</p>
+                  <p className="font-medium">{member.email}</p>
                   <p className="text-sm text-muted-foreground">{member.role}</p>
                   {member.team_members && (
                     <p className="text-xs text-muted-foreground">
@@ -213,6 +253,7 @@ const AddMemberForm = ({ projectId, onSubmit, onCancel, existingMembers }) => {
         .filter(m => m.team_member_id)
         .map(m => m.team_member_id);
       
+      // Modified query to not use auth.users nested select
       const { data, error } = await supabase
         .from('team_members')
         .select(`
@@ -220,19 +261,52 @@ const AddMemberForm = ({ projectId, onSubmit, onCancel, existingMembers }) => {
           user_id,
           position,
           department,
-          status,
-          auth.users (email, id)
+          status
         `)
         .eq('status', 'active');
       
       if (error) throw error;
       
-      // Filter out members already in the project
-      const filteredMembers = data.filter(member => 
-        !existingTeamMemberIds.includes(member.id)
-      );
-      
-      setAvailableTeamMembers(filteredMembers || []);
+      // Fetch user emails separately
+      if (data && data.length > 0) {
+        const userIds = data.map(member => member.user_id);
+        
+        const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+          },
+          body: JSON.stringify({ user_ids: userIds })
+        });
+        
+        let usersData = [];
+        
+        if (response.ok) {
+          usersData = await response.json();
+        } else {
+          console.error('Error fetching user emails:', await response.text());
+          usersData = userIds.map(id => ({ 
+            id, 
+            email: `user-${id.substring(0, 8)}@example.com` 
+          }));
+        }
+        
+        // Combine the data and filter out members already in the project
+        const enhancedMembers = data.map(member => {
+          const userEmail = usersData.find(u => u.id === member.user_id)?.email || 
+                           `user-${member.user_id.substring(0, 8)}@example.com`;
+          
+          return {
+            ...member,
+            email: userEmail
+          };
+        }).filter(member => !existingTeamMemberIds.includes(member.id));
+        
+        setAvailableTeamMembers(enhancedMembers);
+      } else {
+        setAvailableTeamMembers([]);
+      }
     } catch (error) {
       console.error('Error fetching available team members:', error);
     }
@@ -275,7 +349,7 @@ const AddMemberForm = ({ projectId, onSubmit, onCancel, existingMembers }) => {
             <SelectContent>
               {availableTeamMembers.map(member => (
                 <SelectItem key={member.id} value={member.id}>
-                  {member.users?.email} ({member.position})
+                  {member.email} ({member.position})
                 </SelectItem>
               ))}
             </SelectContent>
