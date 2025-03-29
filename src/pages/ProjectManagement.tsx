@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,13 +82,11 @@ const ProjectManagement = () => {
   };
   
   const filteredProjects = projects.filter(project => {
-    // Filter by search term
     if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
         !project.description?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     
-    // Filter by tab
     if (activeTab !== "all" && project.status !== activeTab) {
       return false;
     }
@@ -226,7 +223,6 @@ const ProjectManagement = () => {
         </CardContent>
       </Card>
       
-      {/* Add Project Dialog */}
       <Dialog open={isAddProjectOpen} onOpenChange={setIsAddProjectOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -236,7 +232,6 @@ const ProjectManagement = () => {
         </DialogContent>
       </Dialog>
       
-      {/* View Project Details Dialog */}
       {selectedProject && (
         <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
           <DialogContent className="sm:max-w-[700px]">
@@ -311,7 +306,6 @@ const ProjectManagement = () => {
   );
 };
 
-// Add Project Form Component
 const AddProjectForm = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -353,7 +347,11 @@ const AddProjectForm = ({ onSubmit, onCancel }) => {
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    const submissionData = { ...formData };
+    if (submissionData.manager_id === "none") {
+      submissionData.manager_id = null;
+    }
+    onSubmit(submissionData);
   };
   
   return (
@@ -437,7 +435,7 @@ const AddProjectForm = ({ onSubmit, onCancel }) => {
                 <SelectValue placeholder="Select manager (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {managers.map(manager => (
                   <SelectItem key={manager.id} value={manager.users.id}>
                     {manager.users.email} ({manager.position})

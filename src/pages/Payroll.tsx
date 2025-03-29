@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +29,6 @@ const Payroll = () => {
     try {
       setIsLoading(true);
       
-      // First, get payroll data
       const { data: payrollData, error: payrollError } = await supabase
         .from('payroll')
         .select('*')
@@ -38,10 +36,8 @@ const Payroll = () => {
       
       if (payrollError) throw payrollError;
       
-      // Get user emails separately using the edge function
       const userIds = payrollData.map(payroll => payroll.user_id);
       
-      // Call the Edge Function to get user emails
       const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
         method: 'POST',
         headers: {
@@ -57,14 +53,12 @@ const Payroll = () => {
         usersData = await response.json();
       } else {
         console.error('Error fetching user emails:', await response.text());
-        // Fallback - generate placeholder emails
         usersData = userIds.map(id => ({ 
           id, 
           email: `user-${id.substring(0, 8)}@example.com` 
         }));
       }
       
-      // Combine the payroll data with user emails
       const enhancedPayrolls = payrollData.map(payroll => {
         const userEmail = usersData.find(u => u.id === payroll.user_id)?.email || 
                          `user-${payroll.user_id.substring(0, 8)}@example.com`;
@@ -137,12 +131,10 @@ const Payroll = () => {
   };
   
   const filteredPayrolls = payrolls.filter(payroll => {
-    // Filter by search term
     if (searchTerm && !payroll.email?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     
-    // Filter by tab
     if (activeTab !== "all" && payroll.status !== activeTab) {
       return false;
     }
@@ -312,7 +304,6 @@ const Payroll = () => {
         </CardContent>
       </Card>
       
-      {/* Add Payroll Dialog */}
       <Dialog open={isAddPayrollOpen} onOpenChange={setIsAddPayrollOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -348,7 +339,6 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
       
       if (error) throw error;
       
-      // Call the Edge Function to get user emails
       if (data && data.length > 0) {
         const userIds = data.map(item => item.user_id);
         
@@ -366,7 +356,6 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
         if (response.ok) {
           usersData = await response.json();
         } else {
-          // Fallback - generate placeholder emails
           usersData = userIds.map(id => ({ 
             id, 
             email: `user-${id.substring(0, 8)}@example.com` 

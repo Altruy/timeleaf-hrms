@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +28,6 @@ const Team = () => {
     try {
       setIsLoading(true);
       
-      // First, get the team members
       const { data: teamMembersData, error: teamMembersError } = await supabase
         .from('team_members')
         .select('*')
@@ -37,10 +35,8 @@ const Team = () => {
       
       if (teamMembersError) throw teamMembersError;
       
-      // Then get the user emails separately
       const userIds = teamMembersData.map(member => member.user_id);
       
-      // Call the Edge Function to get user emails
       const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
         method: 'POST',
         headers: {
@@ -56,14 +52,12 @@ const Team = () => {
         usersData = await response.json();
       } else {
         console.error('Error fetching user emails:', await response.text());
-        // Fallback - generate placeholder emails
         usersData = userIds.map(id => ({ 
           id, 
           email: `user-${id.substring(0, 8)}@example.com` 
         }));
       }
       
-      // Merge the team members with their corresponding user emails
       const enhancedTeamMembers = teamMembersData.map(member => {
         const userEmail = usersData.find(u => u.id === member.user_id)?.email || 
                          `user-${member.user_id.substring(0, 8)}@example.com`;
@@ -192,16 +186,12 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
 
   const fetchAvailableUsers = async () => {
     try {
-      // Since we can't query auth.users directly, we'll use a workaround
-      // This is simplified and would need a proper solution in production
       const { data: existingUserIds, error: existingError } = await supabase
         .from('team_members')
         .select('user_id');
       
       if (existingError) throw existingError;
       
-      // For demo purposes, we'll create some fake users
-      // In a real app, you'd need a secure way to get available users
       const mockUsers = [
         { id: '123e4567-e89b-12d3-a456-426614174000', email: 'john.doe@example.com' },
         { id: '123e4567-e89b-12d3-a456-426614174001', email: 'jane.smith@example.com' },
@@ -226,11 +216,9 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
       
       if (error) throw error;
       
-      // Get user emails for managers
       if (data && data.length > 0) {
         const managerUserIds = data.map(manager => manager.user_id);
         
-        // Call the Edge Function to get user emails
         const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
           method: 'POST',
           headers: {
@@ -245,14 +233,12 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
         if (response.ok) {
           usersData = await response.json();
         } else {
-          // Fallback - generate placeholder emails
           usersData = managerUserIds.map(id => ({ 
             id, 
             email: `user-${id.substring(0, 8)}@example.com` 
           }));
         }
         
-        // Merge managers with their emails
         const managersWithEmails = data.map(manager => {
           const userEmail = usersData.find(u => u.id === manager.user_id)?.email || 
                           `user-${manager.user_id.substring(0, 8)}@example.com`;
@@ -276,7 +262,11 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    const submissionData = { ...formData };
+    if (submissionData.reports_to === "none") {
+      submissionData.reports_to = null;
+    }
+    onSubmit(submissionData);
   };
 
   return (
@@ -361,7 +351,7 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
               <SelectValue placeholder="Select manager" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {managers.map(manager => (
                 <SelectItem key={manager.id} value={manager.id}>
                   {manager.email} ({manager.position})
