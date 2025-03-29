@@ -55,7 +55,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const checkInTime = format(now, 'HH:mm:ss');
     const today = format(now, 'yyyy-MM-dd');
     
-    const updatedAttendance = {
+    const updatedAttendance: AttendanceRecord = {
       ...todayAttendance,
       checkInTime,
       status: 'present',
@@ -106,7 +106,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
     const diffInMs = checkOutDate.getTime() - checkInDate.getTime();
     const workingHours = diffInMs / 1000 / 60 / 60;
     
-    const updatedAttendance = {
+    const updatedAttendance: AttendanceRecord = {
       ...todayAttendance,
       checkOutTime,
       workingHours: Number(workingHours.toFixed(2))
