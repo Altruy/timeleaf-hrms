@@ -11,7 +11,7 @@ import { Calendar, Plus, Search, FileDown, Table as TableIcon, Check, X } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, EDGE_FUNCTION_URL } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const Payroll = () => {
@@ -41,11 +41,11 @@ const Payroll = () => {
       const userIds = payrollData.map(payroll => payroll.user_id);
       
       // Call the Edge Function to get user emails
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+      const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.supabaseKey}`
+          'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
         },
         body: JSON.stringify({ user_ids: userIds })
       });
@@ -324,7 +324,6 @@ const Payroll = () => {
   );
 };
 
-// Add Payroll Form Component
 const AddPayrollForm = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     user_id: '',
@@ -352,11 +351,11 @@ const AddPayrollForm = ({ onSubmit, onCancel }) => {
       if (data && data.length > 0) {
         const userIds = data.map(item => item.user_id);
         
-        const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+        const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
           },
           body: JSON.stringify({ user_ids: userIds })
         });

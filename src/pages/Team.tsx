@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, UserPlus } from "lucide-react";
 import OrgChart from "@/components/team/OrgChart";
 import TeamMemberList from "@/components/team/TeamMemberList";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, EDGE_FUNCTION_URL } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const Team = () => {
@@ -41,11 +40,11 @@ const Team = () => {
       const userIds = teamMembersData.map(member => member.user_id);
       
       // Call the Edge Function to get user emails
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+      const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.supabaseKey}`
+          'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
         },
         body: JSON.stringify({ user_ids: userIds })
       });
@@ -173,7 +172,6 @@ const Team = () => {
   );
 };
 
-// Add Member Form Component
 const AddMemberForm = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     user_id: '',
@@ -232,11 +230,11 @@ const AddMemberForm = ({ onSubmit, onCancel }) => {
         const managerUserIds = data.map(manager => manager.user_id);
         
         // Call the Edge Function to get user emails
-        const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get_user_emails`, {
+        const response = await fetch(`${EDGE_FUNCTION_URL}/get_user_emails`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
           },
           body: JSON.stringify({ user_ids: managerUserIds })
         });
