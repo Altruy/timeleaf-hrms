@@ -83,10 +83,10 @@ const OrgNode = ({ node }) => {
         <CardContent className="p-4">
           <div className="flex items-center space-x-4">
             <Avatar>
-              <AvatarFallback>{getInitials(node.users?.email)}</AvatarFallback>
+              <AvatarFallback>{getInitials(node.email)}</AvatarFallback>
             </Avatar>
             <div className="space-y-1">
-              <h4 className="text-sm font-medium leading-none">{node.users?.email}</h4>
+              <h4 className="text-sm font-medium leading-none">{node.email || 'Unknown'}</h4>
               <p className="text-xs text-muted-foreground">{node.position}</p>
               <p className="text-xs text-muted-foreground">{node.department}</p>
             </div>

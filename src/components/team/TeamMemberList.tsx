@@ -33,7 +33,7 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
     if (!searchQuery) return true;
     
     const searchTerm = searchQuery.toLowerCase();
-    const email = member.users?.email?.toLowerCase() || '';
+    const email = member.email?.toLowerCase() || '';
     const department = member.department?.toLowerCase() || '';
     const position = member.position?.toLowerCase() || '';
     
@@ -130,7 +130,7 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
           <TableBody>
             {filteredMembers.map((member) => (
               <TableRow key={member.id}>
-                <TableCell>{member.users?.email}</TableCell>
+                <TableCell>{member.email}</TableCell>
                 <TableCell>{member.department}</TableCell>
                 <TableCell>{member.position}</TableCell>
                 <TableCell>
@@ -182,7 +182,7 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p>{selectedMember.users?.email}</p>
+                  <p>{selectedMember.email}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Department</p>
@@ -208,7 +208,7 @@ const TeamMemberList = ({ teamMembers, isLoading, searchQuery, onRefresh }) => {
                   <p className="text-sm font-medium text-muted-foreground">Reports To</p>
                   <p>
                     {selectedMember.reports_to 
-                      ? teamMembers.find(m => m.id === selectedMember.reports_to)?.users?.email || 'Unknown'
+                      ? teamMembers.find(m => m.id === selectedMember.reports_to)?.email || 'Unknown'
                       : 'None'}
                   </p>
                 </div>
